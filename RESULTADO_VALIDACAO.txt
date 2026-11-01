@@ -1,0 +1,17 @@
+TESTES OK: 53543 verificacoes aprovadas.
+Pilha: topo=30, tamanho=3
+pop: 30
+pop: 20
+pop: 10
+Fila: frente=10, fim=30
+dequeue: 10
+dequeue: 20
+dequeue: 30
+Lista: [10, 20, 30]
+elementAt(1): 20
+remove(1): 20
+pop: 30
+Lista final: [10]
+Mapa: chave 21 apos colisao e exclusao=300
+Mapa: chave 1 atualizada=999
+Mapa apos clear: 0

@@ -1,0 +1,136 @@
+ANÁLISE DE COMPLEXIDADE — ALGORITMOS E ESTRUTURAS DE DADOS
+
+1. Critério utilizado
+
+Considerei n como o número de elementos armazenados e i como o índice
+solicitado, começando em zero. Operações com inteiros e alterações de
+referências têm custo constante. Para cada método, analisei quantos nós
+precisam ser visitados e quanta memória adicional ele utiliza. Os limites
+abaixo são limites justos: quando escrevo O(n) no pior caso dessas operações,
+o custo também é Θ(n).
+
+Distingo o espaço TOTAL da estrutura, que inclui todos os nós armazenados,
+do espaço AUXILIAR de uma operação. Um método pode usar espaço auxiliar
+O(1) mesmo quando a estrutura inteira ocupa O(n). As implementações são
+iterativas: não existe uma pilha recursiva crescendo com a entrada.
+
+2. Pilha com nós encadeados
+
+push: tempo O(1), espaço auxiliar O(1).
+Crio um nó, faço esse nó apontar para o antigo topo e atualizo a referência
+do topo. Nenhum elemento anterior precisa ser percorrido. O nó acrescenta
+uma quantidade constante de memória à estrutura.
+
+pop: tempo O(1), espaço auxiliar O(1).
+Consulto o topo, movo a referência para o próximo nó e diminuo o tamanho.
+Não preciso deslocar outros elementos. A desalocação física posterior fica
+sob responsabilidade do coletor de lixo da JVM.
+
+Espaço total da pilha: O(n), pois cada elemento corresponde a um nó com um
+inteiro e uma referência. top, size e isEmpty também são O(1) em tempo e
+espaço auxiliar.
+
+3. Fila FIFO com início e fim
+
+enqueue: tempo O(1), espaço auxiliar O(1).
+A referência fim permite ligar diretamente o novo nó ao último elemento.
+Não percorro a fila para encontrar sua última posição.
+
+dequeue: tempo O(1), espaço auxiliar O(1).
+Removo o primeiro nó atualizando inicio. Quando a fila fica vazia, também
+limpo fim para que uma inserção posterior funcione corretamente.
+
+rear e front: tempo O(1), espaço auxiliar O(1).
+Acesso diretamente fim.valor e inicio.valor, sem busca ou remoção.
+
+Espaço total da fila: O(n). Cada nó armazena um inteiro e uma referência.
+size e isEmpty são O(1), pois o tamanho é mantido em um contador.
+
+4. Lista duplamente encadeada
+
+A lista mantém inicio, fim, tamanho e nós com anterior e proximo. A busca
+parte da extremidade mais próxima do índice. Para um índice válido i,
+visita O(1 + min(i, n - 1 - i)) nós. Isso melhora o percurso perto das
+extremidades, mas no meio da lista continua sendo O(n).
+
+push: tempo O(1), espaço auxiliar O(1).
+Uso fim para acrescentar um nó e ajusto apenas algumas referências.
+
+pop: tempo O(1), espaço auxiliar O(1).
+Uso fim e fim.anterior para desligar o último nó. Em uma lista simplesmente
+encadeada sem referência ao anterior, essa remoção normalmente exigiria
+percorrer a lista. Minha escolha da lista dupla evita esse percurso.
+
+insert: pior caso O(n) em tempo, espaço auxiliar O(1).
+Para inserir antes de um índice interno, encontro o nó daquele índice e
+refaço as ligações. A busca pode ser linear; a ligação em si custa O(1).
+Inserir no índice size() chama push e custa O(1). Inserir no início também
+custa O(1). Só um novo nó é alocado.
+
+remove: pior caso O(n) em tempo, espaço auxiliar O(1).
+Localizo o nó e conecto seu anterior ao seu próximo. A busca pode visitar
+uma parte linear da lista, enquanto desligar o nó custa O(1). A remoção no
+primeiro ou no último índice custa O(1).
+
+elementAt: pior caso O(n) em tempo, espaço auxiliar O(1).
+O acesso por índice exige caminhar pelos nós; não existe acesso direto por
+posição como em um array. Nas extremidades, custa O(1).
+
+Espaço total da lista: O(n). Existem duas referências por nó, em vez de
+uma, mas multiplicar a memória por um fator constante não altera O(n).
+size custa O(1). printList custa O(n) em tempo e O(n) em espaço de saída,
+pois constrói um texto com todos os valores. Isso considera inteiros Java
+de tamanho fixo, com uma quantidade limitada de dígitos por valor.
+
+5. Hash map: capacidade fixa de dez pares
+
+Usei três arrays primitivos de tamanho 10: chaves, valores e estados. Não
+usei HashMap pronto. Cada posição pode estar livre, ocupada ou removida.
+Existem no máximo dez chaves diferentes, sem redimensionamento.
+
+Função: hash(chave) = floorMod(31L * chave, 10).
+
+O multiplicador 31 é primo e coprimo com 10. Multiplicadores coprimos com a
+capacidade evitam perder classes de resíduos na multiplicação modular;
+por exemplo, multiplicar por 2 e reduzir módulo 10 só produziria índices
+pares. Porém ser primo, isoladamente, não garante uma distribuição boa.
+
+Há uma limitação importante nesta função didática: 31 módulo 10 é 1.
+Portanto, ela equivale a floorMod(chave, 10), e chaves que diferem por 10
+colidem. Não afirmo que 31 elimina colisões ou melhora esta distribuição.
+Primos podem ajudar em outros esquemas de hash, mas a qualidade depende
+também da capacidade, da mistura dos bits e das chaves reais utilizadas.
+Para este exercício, escolhi simplicidade e tratei explicitamente as
+colisões. O uso de long evita overflow na multiplicação; floorMod garante
+índices de 0 a 9 também para chaves negativas e Integer.MIN_VALUE.
+
+Colisões: sondagem linear. Se o índice está ocupado por outra chave,
+examino a posição seguinte, retornando ao início após a posição 9.
+Cada operação examina no máximo dez posições. A atualização de uma chave
+existente funciona até quando o mapa está cheio. Uma nova chave no mapa
+cheio lança IllegalStateException.
+
+Exclusões usam a marca REMOVIDO. Não basta transformar uma posição removida
+em LIVRE: isso encerraria a busca cedo e poderia esconder chaves que
+colidiram e foram guardadas depois dela. Uma inserção guarda a primeira
+posição removida, mas continua procurando uma chave já existente antes
+de decidir onde inserir, evitando duplicatas.
+
+Como a capacidade é FIXA em 10, put, get, delete e clear têm tempo O(1)
+no pior caso e espaço total O(1). O espaço auxiliar também é O(1).
+Se generalizássemos a capacidade para m posições, a sondagem poderia
+custar O(m) no pior caso, clear custaria O(m) e o espaço total seria O(m).
+Com boa distribuição e baixa ocupação, a sondagem costuma ser pequena;
+perto da lotação, agrupamentos podem aumentar bastante o custo. Não se
+deve confundir essa generalização com o limite fixo deste exercício.
+
+6. Aplicação profissional
+
+A pilha representa uma ordem LIFO, útil como modelo para desfazer ações e
+percorrer estados. A fila representa ordem FIFO, útil para organizar tarefas
+e entender sistemas de mensageria. Uma lista encadeada facilita inserir e
+remover quando já se conhece o nó, mas exige percursos para acesso por
+índice. O mapa associa chaves a valores, como em cadastros e caches.
+
+Essas implementações têm finalidade didática, não são sincronizadas para
+acesso concorrente e não substituem as garantias de um sistema distribuído.
